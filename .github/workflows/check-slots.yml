@@ -1,0 +1,53 @@
+name: Verificar vagas
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: check-slots
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Disparar POST no deploy da Vercel
+        env:
+          APP_URL: ${{ vars.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          set -euo pipefail
+          REPO="${GITHUB_REPOSITORY##*/}"
+          OWNER="${GITHUB_REPOSITORY%%/*}"
+          OWNER_LC="$(echo "$OWNER" | tr '[:upper:]' '[:lower:]')"
+          REPO_LC="$(echo "$REPO" | tr '[:upper:]' '[:lower:]')"
+
+          CANDIDATES=()
+          if [ -n "${APP_URL:-}" ]; then
+            CANDIDATES+=("${APP_URL}")
+          fi
+          CANDIDATES+=(
+            "https://${REPO_LC}.vercel.app"
+            "https://${REPO_LC}-${OWNER_LC}.vercel.app"
+          )
+
+          AUTH=()
+          if [ -n "${CRON_SECRET:-}" ]; then
+            AUTH=(-H "Authorization: Bearer ${CRON_SECRET}")
+          fi
+
+          for base in "${CANDIDATES[@]}"; do
+            url="${base%/}/api/cron/check-slots"
+            echo "[slots] a tentar $url"
+            if body="$(curl -fsS -L --max-time 25 "${AUTH[@]}" "$url")"; then
+              echo "$body"
+              echo "[slots] ok · $url"
+              exit 0
+            fi
+          done
+
+          echo "[slots] não encontrei o site na Vercel. Importe o repo na Vercel e, se o URL não for ${REPO_LC}.vercel.app, defina a variável APP_URL no GitHub (Settings → Variables)."
+          exit 1
