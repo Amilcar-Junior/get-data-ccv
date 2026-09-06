@@ -54,8 +54,8 @@ export default async function HomePage() {
             {config.checkIntervalMinutes === 1 ? "minuto" : "minutos"}. No
             GitHub, a Action chama o site na Vercel; em local, o{" "}
             <code>next dev</code> dispara a primeira consulta ao arrancar.
-            E-mail quando a resposta deixar de ser{" "}
-            <code className="text-[var(--gold)]">{"{ \"data\": {} }"}</code>.
+            E-mail só se a resposta não for vazia. No formato de datas, o
+            e-mail diz que tem vagas; qualquer outro corpo também avisa.
           </p>
         </div>
         <Link
@@ -102,9 +102,12 @@ export default async function HomePage() {
               .
             </li>
             <li>
-              <span className="text-[var(--gold)]">03 ·</span> Se o JSON não
-              for exactamente um objeto <code>data</code> vazio, envia e-mail
-              via senha de app.
+              <span className="text-[var(--gold)]">03 ·</span> Vazio ({" "}
+              <code className="text-[var(--ink)]">{`{ "data": {} }`}</code>
+              ) → sem e-mail. Lista{" "}
+              <code className="text-[var(--ink)]">date</code> +{" "}
+              <code className="text-[var(--ink)]">periods</code> → e-mail
+              «tem vagas». Outro JSON → e-mail «resposta diferente do vazio».
             </li>
           </ol>
         </article>

@@ -2,6 +2,11 @@
 
 import { useEffect, useState } from "react";
 import type { LastCheck } from "@/lib/slots/types";
+import {
+  extractSlotDays,
+  formatSlotDayLine,
+  summarizeSlotDays,
+} from "@/lib/slots/evaluate";
 
 type HealthPayload = {
   lastCheck: LastCheck | null;
@@ -19,9 +24,27 @@ function pretty(value: unknown, raw?: string) {
 
 function reasonLabel(reason: string) {
   if (reason === "sem_vagas") return "sem vagas";
-  if (reason === "resposta_diferente") return "resposta diferente";
+  if (reason === "vagas") return "tem vagas";
+  if (reason === "resposta_diferente") return "resposta diferente do vazio";
   if (reason === "http_erro") return "erro HTTP";
   return reason;
+}
+
+function SlotDays({ body }: { body: unknown }) {
+  const days = extractSlotDays(body);
+  if (days.length === 0) return null;
+  const summary = summarizeSlotDays(days);
+
+  return (
+    <div className="mt-4">
+      <p className="text-sm text-[var(--gold)]">{summary}</p>
+      <ol className="mt-3 max-h-[420px] space-y-1 overflow-auto text-sm text-[var(--ink)]">
+        {days.map((day) => (
+          <li key={day.date}>{formatSlotDayLine(day)}</li>
+        ))}
+      </ol>
+    </div>
+  );
 }
 
 export function LastResponse({
@@ -102,6 +125,7 @@ export function LastResponse({
               <dd className="text-[var(--ink)]">{current.durationMs} ms</dd>
             </div>
           </dl>
+          <SlotDays body={current.body} />
           <pre className="mt-4 max-h-[420px] overflow-auto rounded-xl bg-[#0b1020] p-4 font-mono text-xs leading-relaxed text-[var(--gold)]">
             {pretty(current.body, current.rawBody)}
           </pre>

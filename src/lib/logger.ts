@@ -1,5 +1,11 @@
 import { Console } from "node:console";
 
+import {
+  extractSlotDays,
+  formatSlotDayLine,
+  summarizeSlotDays,
+} from "@/lib/slots/evaluate";
+
 type LogFields = Record<string, unknown>;
 
 const terminal = new Console({
@@ -27,10 +33,22 @@ function prettyBody(body: unknown, rawBody: string): string {
 
 function reasonLabel(reason: string): string {
   if (reason === "sem_vagas") return "sem vagas";
-  if (reason === "resposta_diferente") return "resposta diferente — possível vaga";
+  if (reason === "vagas") return "tem vagas";
+  if (reason === "resposta_diferente") return "resposta diferente do vazio";
   if (reason === "http_erro") return "erro HTTP";
   if (reason === "intervalo") return "intervalo — POST não enviado";
   return reason;
+}
+
+function bodyForDump(body: unknown, rawBody: string): string {
+  const days = extractSlotDays(body);
+  if (days.length === 0) return prettyBody(body, rawBody);
+
+  const summary = summarizeSlotDays(days) ?? `${days.length} dias`;
+  const preview = days.slice(0, 8).map((day) => formatSlotDayLine(day));
+  const extra =
+    days.length > 8 ? [`… +${days.length - 8} dias`] : [];
+  return [summary, ...preview, ...extra].join("\n");
 }
 
 /**
@@ -91,8 +109,12 @@ export function dumpPostResponse(input: {
   rawBody: string;
   skipped?: boolean;
 }) {
-  const pretty = prettyBody(input.body, input.rawBody);
-  const compact = compactJson(input.body, input.rawBody);
+  const pretty = bodyForDump(input.body, input.rawBody);
+  const days = extractSlotDays(input.body);
+  const compact =
+    days.length > 0
+      ? summarizeSlotDays(days) ?? `${days.length} dias`
+      : compactJson(input.body, input.rawBody);
   const estado = input.skipped
     ? "última resposta guardada — intervalo ainda não passou"
     : "consulta feita agora";

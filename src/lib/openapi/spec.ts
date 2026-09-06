@@ -13,7 +13,8 @@ export function getOpenApiDocument(origin: string) {
         "O POST ao MNE corre **sozinho**: GitHub Action a cada 5 minutos, cron diário na Vercel, e scheduler local no `next dev`.",
         "A frequência real da consulta ao MNE é `CHECK_INTERVAL_MINUTES`.",
         "",
-        "Resposta considerada **sem vagas**: `{ \"data\": {} }`.",
+        "Resposta com **vagas**: array de `{ date, periods }` (ou `{ data: [ ... ] }`).",
+        "Resposta considerada **sem vagas**: `{ \"data\": {} }` ou lista vazia.",
         "Qualquer outro corpo ou status HTTP dispara um e-mail.",
         "",
         "## Autenticação",
@@ -335,7 +336,7 @@ export function getOpenApiDocument(origin: string) {
             },
             reason: {
               type: "string",
-              enum: ["sem_vagas", "resposta_diferente", "http_erro", "intervalo"],
+              enum: ["sem_vagas", "vagas", "resposta_diferente", "http_erro", "intervalo"],
             },
             checkedAt: { type: "string", format: "date-time" },
             lastCheck: { $ref: "#/components/schemas/LastCheck" },
@@ -475,13 +476,13 @@ export function getOpenApiDocument(origin: string) {
           },
         },
         SlotsFound: {
-          summary: "Resposta diferente — e-mail enviado",
+          summary: "Datas disponíveis — e-mail enviado",
           value: {
             ok: true,
             skipped: false,
             notified: true,
             notifySkippedReason: null,
-            reason: "resposta_diferente",
+            reason: "vagas",
             checkedAt: "2026-09-04T14:00:00.000Z",
             interval: {
               minutes: 5,
@@ -494,7 +495,15 @@ export function getOpenApiDocument(origin: string) {
               url: "https://pedidodevistos.mne.gov.pt/VistosOnline/slots?posto_id=5084",
               postoId: "5084",
               durationMs: 388,
-              body: { data: { "2026-09-10": ["09:00", "09:30"] } },
+              body: [
+                {
+                  date: "2027-02-22",
+                  periods: [
+                    { id: 3, description: "9-10" },
+                    { id: 4, description: "10-11" },
+                  ],
+                },
+              ],
             },
           },
         },

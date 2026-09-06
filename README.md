@@ -18,7 +18,7 @@ Documentação extra (opcional): **`/docs`** (Swagger) · **`/api/openapi`**.
 
 1. GitHub Action (ou o scheduler local) chama `GET /api/cron/check-slots`.
 2. O script só consulta o MNE se já tiverem passado `CHECK_INTERVAL_MINUTES`.
-3. Sem vagas = `{ "data": {} }`. Qualquer outro JSON (ou HTTP ≠ 200) dispara e-mail.
+3. Vazio (`{ "data": {} }`) → sem e-mail. Formato `{ date, periods }` → e-mail a dizer que tem vagas. Qualquer outro corpo (ou HTTP ≠ 200) → e-mail na mesma.
 4. `NOTIFY_COOLDOWN_MINUTES` evita spam se a mesma resposta se repetir.
 
 Cookie e captcha **expiram**. Quando a sessão cair, actualize `VISTOS_COOKIE` e `VISTOS_CAPTCHA` na Vercel.

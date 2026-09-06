@@ -174,12 +174,18 @@ export async function runSlotCheck(
     try {
       await sendSlotAlert({
         postoId,
-        reason: evaluation.reason === "sem_vagas" ? "resposta_diferente" : evaluation.reason,
+        reason:
+          evaluation.reason === "http_erro"
+            ? "http_erro"
+            : evaluation.reason === "vagas"
+              ? "vagas"
+              : "resposta_diferente",
         httpStatus: upstream.status,
         durationMs: upstream.durationMs,
         payload: upstream.payload,
         rawBody: upstream.rawBody,
         checkedAt: checkedAt.toISOString(),
+        days: evaluation.days,
       });
       notified = true;
     } catch (error) {
